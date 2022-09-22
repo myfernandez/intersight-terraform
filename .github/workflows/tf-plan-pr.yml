@@ -1,0 +1,61 @@
+# This is a basic workflow to help you get started with Actions
+
+name: TF-Plan
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "!main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+  # ... lint removed for brevity
+
+  plan:
+    name: TFPlan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.2.7
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform/${{ matrix.path }}
+          terraform init -input=false          
+
+      - name: Plan Terraform
+        id: plan
+        continue-on-error: true
+        run: |
+          terraform plan -input=false -no-color          
+
+ #     - name: Post Plan to GitHub PR
+ #       uses: mshick/add-pr-comment@v1
+ #       with:
+ #         allow-repeats: true
+ #         repo-token: ${{ secrets.GITHUB_TOKEN }}
+ #         repo-token-user-login: 'github-actions[bot]'
+ #         message: |
+ #           ## ${{ matrix.path }} plan
+ #           ```
+ #           ${{ steps.plan.outputs.stdout || steps.plan.outputs.stderr }}
+ #           ```    
